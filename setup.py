@@ -2,10 +2,10 @@ from setuptools import setup
 
 setup(
     name="notifications_android_tv",
-    version="0.1.0",
+    version="0.1.1",
     description="Notifications for Android/Fire TVs",
     url="https://github.com/engrbm87/notifications_android_tv",
-    download_url="https://github.com/engrbm87/notifications_android_tv/archive/refs/tags/0.1.0.tar.gz",
+    download_url="https://github.com/engrbm87/notifications_android_tv/archive/refs/tags/0.1.1.tar.gz",
     author="Rami Mousleh",
     author_email="engrbm87@gmail.com",
     install_requires=["requests"],

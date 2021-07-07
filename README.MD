@@ -1,13 +1,21 @@
 # Android TV / Fire TV Notifications
 
-Python package that interfaces with Notifications for Android TV and Notifications for Fire TV to send notifications to your TV.
+Python package that interfaces with [Notifications for Android TV](https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google) and [Notifications for Fire TV](https://play.google.com/store/apps/details?id=de.cyberdream.firenotifications.google) to send notifications to your TV.
 
 ## Usage
 
+- Install the application on your TV
+- Get the IP of the TV unit
+
 ```python
-from notifications_android_tv import Notifier
-notify = Notifier("192.168.1.10")
-notify.send("message")
+from notifications_android_tv import Notifications
+notify = Notifications("192.168.1.10")
+notify.send(
+    "message text",
+    title="Title text",
+    fontsize="medium",
+    bkgcolor="green"    
+)
 ```
 
 ## Optional parameters

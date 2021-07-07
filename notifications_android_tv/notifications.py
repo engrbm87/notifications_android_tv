@@ -129,7 +129,7 @@ class Notifications:
         if icon:
             payload["filename"] = (
                 "image",
-                image_file,
+                icon,
                 "application/octet-stream",
                 {"Expires": "0"},
             )

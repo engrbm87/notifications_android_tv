@@ -156,3 +156,16 @@ class Notifications:
 
 class ConnectError(Exception):
     """Exception raised for connection error."""
+
+
+def test_port(host: str, port: int = 8009) -> bool:
+    """Test if a port is open. Can be used to separate tv devices from others
+    :param host: The host to test.
+    :param port: (Optional) The port to test. Defaults to firetv DIAL
+    A valid fire stick device should have this port open
+    """
+    try:
+        requests.get(f"http://{host}:{port}")
+    except ConnectionError:
+        return False
+    return True

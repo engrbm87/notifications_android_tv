@@ -59,8 +59,7 @@ class Notifications:
         try:
             requests.get(self.url, timeout=self.DEFAULT_TIMEOUT)
         except (ConnectionError, ConnectTimeout) as err:
-            _LOGGER.error("Error communicating with %s: %s", self.url, str(err))
-            raise ConnectError from err
+            raise ConnectError(err) from err
 
     def send(
         self,
@@ -129,7 +128,7 @@ class Notifications:
         if icon:
             payload["filename"] = (
                 "image",
-                image_file,
+                icon,
                 "application/octet-stream",
                 {"Expires": "0"},
             )

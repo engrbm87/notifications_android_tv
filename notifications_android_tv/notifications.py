@@ -73,8 +73,8 @@ class Notifications:
         bkgcolor: str | None = None,
         transparency: str | None = None,
         interrupt: bool = False,
-        icon: BufferedReader | None = None,
-        image_file: BufferedReader | None = None,
+        icon: BufferedReader | bytes | None = None,
+        image_file: BufferedReader | bytes | None = None,
     ) -> bool:
         """Send message with parameters.
         :param message: The notification message.

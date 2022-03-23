@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import base64
-import io
+from io import BufferedReader, BytesIO
 import logging
 from typing import Final
 
@@ -64,15 +66,15 @@ class Notifications:
     def send(
         self,
         message,
-        title: str = None,
-        duration: int = None,
-        fontsize: str = None,
-        position: str = None,
-        bkgcolor: str = None,
-        transparency: str = None,
+        title: str | None = None,
+        duration: int | None = None,
+        fontsize: str | None = None,
+        position: str | None = None,
+        bkgcolor: str | None = None,
+        transparency: str | None = None,
         interrupt: bool = False,
-        icon: bytes = None,
-        image_file: bytes = None,
+        icon: BufferedReader | bytes | None = None,
+        image_file: BufferedReader | bytes | None = None,
     ) -> bool:
         """Send message with parameters.
         :param message: The notification message.
@@ -105,7 +107,7 @@ class Notifications:
         payload = {
             "filename": (
                 "icon.png",
-                io.BytesIO(base64.b64decode(self.DEFAULT_ICON)),
+                BytesIO(base64.b64decode(self.DEFAULT_ICON)),
                 "application/octet-stream",
                 {"Expires": "0"},
             ),

@@ -10,7 +10,12 @@ Python package that interfaces with [Notifications for Android TV](https://play.
 ```python
 from notifications_android_tv import Notifications
 notify = Notifications("192.168.1.10")
-notify.send(
+# validate connection
+try:
+    await notify.async_connect()
+expect ConnectError:
+    return False
+await notify.async_send(
     "message text",
     title="Title text",
     fontsize="medium",

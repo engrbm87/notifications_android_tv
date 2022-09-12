@@ -9,16 +9,11 @@ from typing import Any
 
 import httpx
 
-from .const import (
-    BKG_COLORS,
-    DEFAULT_ICON,
-    FONTSIZES,
-    POSITIONS,
-    TRANSPARENCIES
-)
+from .const import BKG_COLORS, DEFAULT_ICON, FONTSIZES, POSITIONS, TRANSPARENCIES
 from .exceptions import ConnectError, InvalidResponse
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class Notifications:
     def __init__(

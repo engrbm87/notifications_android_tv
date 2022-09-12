@@ -40,5 +40,3 @@ TRANSPARENCIES: Final = {
     "75%": 4,
     "100%": 5,
 }
-
-

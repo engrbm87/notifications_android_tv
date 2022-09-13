@@ -9,7 +9,14 @@ from typing import Any
 
 import httpx
 
-from .const import BKG_COLORS, DEFAULT_ICON, FONTSIZES, POSITIONS, TRANSPARENCIES
+from .const import (
+    DEFAULT_ICON,
+    DEFAULT_TITLE,
+    BkgColors,
+    FontSizes,
+    Positions,
+    Transparencies,
+)
 from .exceptions import ConnectError, InvalidResponse
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,12 +49,12 @@ class Notifications:
     async def async_send(
         self,
         message: str,
-        title: str | None = None,
-        duration: int | None = None,
-        fontsize: str | None = None,
-        position: str | None = None,
-        bkgcolor: str | None = None,
-        transparency: str | None = None,
+        title: str = DEFAULT_TITLE,
+        duration: int = 5,
+        bkgcolor: str = BkgColors.GREY,
+        fontsize: FontSizes | int = FontSizes.MEDIUM,
+        position: Positions | int = Positions.BOTTOM_RIGHT,
+        transparency: Transparencies | int = Transparencies._0_PERCENT,
         interrupt: bool = False,
         icon: BufferedReader | bytes | None = None,
         image_file: BufferedReader | bytes | None = None,
@@ -58,13 +65,14 @@ class Notifications:
         :param title: (Optional) The notification title.
         :param duration: (Optional) Display the notification for the specified period.
             Default duration is 5 seconds.
-        :param fontsize: (Optional) Specify text font size (`small`, `medium`, `large`, `max`).
-        :param position: (Optional) Specify notification position (`bottom-right`, `bottom-left`,
-            `top-right`, `top-left`, `center`). Default is `bottom-right`.
-        :param bkgcolor: (Optional) Specify background color. Can be one of (`grey`, `black`, `indigo`,
-            `green`, `red`, `cyan`, `teal`, `amber`, `pink`). Default is `grey`.
-        :param transparency: (Optional) Specify the background transparency of the notification.
-            Can be one of (`0%`, `25%`, `50%`, `75%`, `100%`). Default is `0%`.
+        :param fontsize: (Optional) Specify text font size from class `Fontsizes`.
+            Default is `FontSizes.MEDIUM`.
+        :param position: (Optional) Specify notification position from class `Positions`.
+            Default is `Positions.BOTTOM_RIGHT`.
+        :param bkgcolor: (Optional) Specify background color from class BkgColors.
+            Default is `BkgColors.GREY`.
+        :param transparency: (Optional) Specify the background transparency of the notification
+            from class `Transparencies`. Default is `Transparencies._0_PERCENT`.
         :param interrupt: (Optional) Setting it to true makes the notification interactive
             and can be dismissed or selected to display more details. Default is False
         :param icon: (Optional) Attach icon to notification. Type must be `bytes`.
@@ -82,26 +90,19 @@ class Notifications:
         """
         data: dict[str, Any] = {
             "msg": message,
+            "title": title,
+            "duration": duration,
+            "bkgcolor": bkgcolor,
+            "fontsize": int(fontsize),
+            "position": int(position),
+            "transparency": int(transparency),
+            "interrupt": interrupt,
         }
-        if title:
-            data["title"] = title
-        if duration:
-            data["duration"] = duration
-        if fontsize in FONTSIZES:
-            data["fontsize"] = FONTSIZES[fontsize]
-        if position in POSITIONS:
-            data["position"] = POSITIONS[position]
-        if bkgcolor in BKG_COLORS:
-            data["bkgcolor"] = BKG_COLORS[bkgcolor]
-        if transparency in TRANSPARENCIES:
-            data["transparency"] = TRANSPARENCIES[transparency]
-        if interrupt:
-            data["interrupt"] = 1
 
         files = {
             "filename": (
                 "image",
-                icon or BytesIO(base64.b64decode(DEFAULT_ICON)),
+                icon or BytesIO(base64.b64decode(DEFAULT_ICON)).read(),
                 "application/octet-stream",
                 {"Expires": "0"},
             )
@@ -113,7 +114,7 @@ class Notifications:
                 "application/octet-stream",
                 {"Expires": "0"},
             )
-        _LOGGER.info("data: %s, files: %s", data, files)
+        _LOGGER.debug("data: %s, files: %s", data, files)
 
         httpx_client: httpx.AsyncClient = (
             self.httpx_client if self.httpx_client else httpx.AsyncClient(verify=False)

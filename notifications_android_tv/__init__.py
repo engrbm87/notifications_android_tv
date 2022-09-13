@@ -1,10 +1,10 @@
-"""Library for sending notifications to Android/Fire TVs"""
+"""Library for sending notifications to Android/Fire TVs."""
 
 from __future__ import annotations
 
 import base64
-import logging
 from io import BufferedReader, BytesIO
+import logging
 from typing import Any
 
 import httpx
@@ -16,6 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Notifications:
+    """Notifications class for Android/Fire Tvs."""
+
     def __init__(
         self,
         host: str,
@@ -51,6 +53,7 @@ class Notifications:
         image_file: BufferedReader | bytes | None = None,
     ) -> None:
         """Send message with parameters.
+
         :param message: The notification message.
         :param title: (Optional) The notification title.
         :param duration: (Optional) Display the notification for the specified period.

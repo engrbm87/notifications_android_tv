@@ -19,7 +19,7 @@ await notify.async_send(
     "message text",
     title="Title text",
     fontsize="medium",
-    bkgcolor="green"    
+    bkgcolor="green"
 )
 ```
 

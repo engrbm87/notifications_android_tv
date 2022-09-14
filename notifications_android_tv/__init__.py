@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import base64
-from io import BufferedReader, BytesIO
+from io import BytesIO
 import logging
 from typing import Any
 
@@ -17,9 +17,34 @@ from .const import (
     Positions,
     Transparencies,
 )
-from .exceptions import ConnectError, InvalidResponse
+from .exceptions import ConnectError, InvalidImage, InvalidResponse
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ImageUrlSource:
+    """Image source from url or local path."""
+
+    def __init__(
+        self,
+        url: str,
+        username: str | None = None,
+        password: str | None = None,
+        authentication: str | None = None,
+    ) -> None:
+        """Initiate image source class."""
+        self.url = url
+        self._auth: httpx.BasicAuth | httpx.DigestAuth | None = None
+
+        if authentication:
+            if authentication not in ["basic", "disgest"]:
+                raise ValueError("authentication must be 'basic' or 'digest'")
+            if username is None or password is None:
+                raise ValueError("username and password must be specified")
+            if authentication == "basic":
+                self._auth = httpx.BasicAuth(username, password)
+            else:
+                self._auth = httpx.DigestAuth(username, password)
 
 
 class Notifications:
@@ -34,6 +59,39 @@ class Notifications:
         """Initialize notifier."""
         self.url = f"http://{host}:{port}"
         self.httpx_client = httpx_client
+
+    async def _async_get_image(self, image_source: ImageUrlSource | str) -> bytes:
+        """Load file from path or url."""
+        httpx_client: httpx.AsyncClient = (
+            self.httpx_client if self.httpx_client else httpx.AsyncClient()
+        )
+        if isinstance(image_source, ImageUrlSource):
+            try:
+                async with httpx_client as client:
+                    response = await client.get(
+                        image_source.url, auth=image_source._auth
+                    )
+
+            except (httpx.ConnectError, httpx.TimeoutException) as err:
+                raise InvalidImage(
+                    f"Error fetching image from {image_source.url}: {err}"
+                ) from err
+            if response.status_code != httpx.codes.OK:
+                raise InvalidImage(
+                    f"Error fetching image from {image_source.url}: {response}"
+                )
+            if "image" not in response.headers["content-type"]:
+                raise InvalidImage(
+                    f"Response content type is not an image: {response.headers['content-type']}"
+                )
+            return response.content
+        else:
+            try:
+                with open(image_source, "rb") as file:
+                    image = file.read()
+            except FileNotFoundError as err:
+                raise InvalidImage(err) from err
+            return image
 
     async def async_connect(self) -> None:
         """Test connecting to server."""
@@ -56,8 +114,8 @@ class Notifications:
         position: Positions | int = Positions.BOTTOM_RIGHT,
         transparency: Transparencies | int = Transparencies._0_PERCENT,
         interrupt: bool = False,
-        icon: BufferedReader | bytes | None = None,
-        image_file: BufferedReader | bytes | None = None,
+        icon: ImageUrlSource | str | None = None,
+        image_file: ImageUrlSource | str | None = None,
     ) -> None:
         """Send message with parameters.
 
@@ -99,10 +157,15 @@ class Notifications:
             "interrupt": interrupt,
         }
 
+        if icon is not None:
+            icon_image = await self._async_get_image(icon)
+        else:
+            icon_image = BytesIO(base64.b64decode(DEFAULT_ICON)).read()
+
         files = {
             "filename": (
                 "image",
-                icon or BytesIO(base64.b64decode(DEFAULT_ICON)).read(),
+                icon_image,
                 "application/octet-stream",
                 {"Expires": "0"},
             )
@@ -110,7 +173,7 @@ class Notifications:
         if image_file:
             files["filename2"] = (
                 "image",
-                image_file,
+                await self._async_get_image(image_file),
                 "application/octet-stream",
                 {"Expires": "0"},
             )

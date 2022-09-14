@@ -69,7 +69,7 @@ class Notifications:
             try:
                 async with httpx_client as client:
                     response = await client.get(
-                        image_source.url, auth=image_source._auth
+                        image_source.url, auth=image_source._auth, timeout=10
                     )
 
             except (httpx.ConnectError, httpx.TimeoutException) as err:
@@ -109,10 +109,10 @@ class Notifications:
         message: str,
         title: str = DEFAULT_TITLE,
         duration: int = 5,
-        bkgcolor: str = BkgColors.GREY,
-        fontsize: FontSizes | int = FontSizes.MEDIUM,
-        position: Positions | int = Positions.BOTTOM_RIGHT,
-        transparency: Transparencies | int = Transparencies._0_PERCENT,
+        bkgcolor: BkgColors = BkgColors.GREY,
+        fontsize: FontSizes = FontSizes.MEDIUM,
+        position: Positions = Positions.BOTTOM_RIGHT,
+        transparency: Transparencies = Transparencies._0_PERCENT,
         interrupt: bool = False,
         icon: ImageUrlSource | str | None = None,
         image_file: ImageUrlSource | str | None = None,
@@ -150,10 +150,10 @@ class Notifications:
             "msg": message,
             "title": title,
             "duration": duration,
-            "bkgcolor": bkgcolor,
-            "fontsize": int(fontsize),
-            "position": int(position),
-            "transparency": int(transparency),
+            "bkgcolor": bkgcolor.value,
+            "fontsize": fontsize.value,
+            "position": position.value,
+            "transparency": transparency.value,
             "interrupt": interrupt,
         }
 

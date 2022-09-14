@@ -38,9 +38,9 @@ class ImageUrlSource:
 
         if authentication:
             if authentication not in ["basic", "disgest"]:
-                raise AttributeError("authentication must be 'basic' or 'digest'")
+                raise ValueError("authentication must be 'basic' or 'digest'")
             if username is None or password is None:
-                raise AttributeError("username and password must be specified")
+                raise ValueError("username and password must be specified")
             if authentication == "basic":
                 self._auth = httpx.BasicAuth(username, password)
             else:

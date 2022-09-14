@@ -71,19 +71,19 @@ async def test_get_image_fails(httpx_mock: HTTPXMock) -> None:
 async def test_image_source() -> None:
     """Test constructing ImageUrlSource."""
     # test provding wrong authentication type
-    with pytest.raises(AttributeError) as err:
+    with pytest.raises(ValueError) as err:
         ImageUrlSource("http://example.com/image.png", authentication="something")
         assert err == "authentication must be 'basic' or 'digest'"
 
     # test missing password
-    with pytest.raises(AttributeError) as err:
+    with pytest.raises(ValueError) as err:
         ImageUrlSource(
             "http://example.com/image.png", authentication="basic", username="user"
         )
         assert err == "username and password must be specified"
 
     # test missing username
-    with pytest.raises(AttributeError) as err:
+    with pytest.raises(ValueError) as err:
         ImageUrlSource(
             "http://example.com/image.png", authentication="basic", password="pass"
         )

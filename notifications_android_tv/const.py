@@ -1,6 +1,6 @@
 """Constants for the library."""
 
-from enum import IntEnum
+from enum import Enum, IntEnum
 from typing import Final
 
 DEFAULT_TITLE: Final = "Notification"
@@ -10,7 +10,7 @@ DEFAULT_ICON: Final = (
 )
 
 
-class BkgColors:
+class BkgColors(Enum):
     """Background color options."""
 
     GREY = "#607d8b"

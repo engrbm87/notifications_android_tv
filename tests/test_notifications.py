@@ -1,9 +1,10 @@
 """Tests for Notifications."""
+
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from notifications_android_tv import Notifications, exceptions
+from notifications_android_tv import ImageUrlSource, Notifications, exceptions
 
 
 @pytest.mark.asyncio
@@ -40,3 +41,50 @@ async def test_sending_successfull(httpx_mock: HTTPXMock) -> None:
 
     notifier = Notifications("0.0.0.0")
     await notifier.async_send("Message text")
+
+
+@pytest.mark.asyncio
+async def test_get_image_fails(httpx_mock: HTTPXMock) -> None:
+    """Test getting an image from source fails."""
+    notifier = Notifications("0.0.0.0")
+
+    # test getting image non existing file fails
+    with pytest.raises(exceptions.InvalidImage):
+        await notifier.async_send("Message text", icon="image_file.jpg")
+
+    # test image url doesn't return 200
+    httpx_mock.add_response(status_code=400)
+    with pytest.raises(exceptions.InvalidImage):
+        await notifier.async_send(
+            "Message text", icon=ImageUrlSource("http://example.com/image.png")
+        )
+
+    # test returned content is not an image type
+    httpx_mock.add_response(headers={"content-type": "text/html"})
+    with pytest.raises(exceptions.InvalidImage):
+        await notifier.async_send(
+            "Message text", icon=ImageUrlSource("http://example.com")
+        )
+
+
+@pytest.mark.asyncio
+async def test_image_source() -> None:
+    """Test constructing ImageUrlSource."""
+    # test provding wrong authentication type
+    with pytest.raises(AttributeError) as err:
+        ImageUrlSource("http://example.com/image.png", authentication="something")
+        assert err == "authentication must be 'basic' or 'digest'"
+
+    # test missing password
+    with pytest.raises(AttributeError) as err:
+        ImageUrlSource(
+            "http://example.com/image.png", authentication="basic", username="user"
+        )
+        assert err == "username and password must be specified"
+
+    # test missing username
+    with pytest.raises(AttributeError) as err:
+        ImageUrlSource(
+            "http://example.com/image.png", authentication="basic", password="pass"
+        )
+        assert err == "username and password must be specified"

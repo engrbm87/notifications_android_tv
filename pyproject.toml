@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "notifications-android-tv"
-version = "0.2.0"
+version = "1.0.0"
 description = "Python API for sending notifications to Android/Fire TVs"
 authors = ["Rami Mosleh <engrbm87@gmail.com>"]
 homepage = "https://github.com/engrbm87/notifications_android_tv"

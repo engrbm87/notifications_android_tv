@@ -30,18 +30,18 @@ class ImageUrlSource:
         url: str,
         username: str | None = None,
         password: str | None = None,
-        authentication: str | None = None,
+        auth: str | None = None,
     ) -> None:
         """Initiate image source class."""
         self.url = url
         self._auth: httpx.BasicAuth | httpx.DigestAuth | None = None
 
-        if authentication:
-            if authentication not in ["basic", "disgest"]:
+        if auth:
+            if auth not in ["basic", "disgest"]:
                 raise ValueError("authentication must be 'basic' or 'digest'")
             if username is None or password is None:
                 raise ValueError("username and password must be specified")
-            if authentication == "basic":
+            if auth == "basic":
                 self._auth = httpx.BasicAuth(username, password)
             else:
                 self._auth = httpx.DigestAuth(username, password)

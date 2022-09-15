@@ -72,19 +72,26 @@ async def test_image_source() -> None:
     """Test constructing ImageUrlSource."""
     # test provding wrong authentication type
     with pytest.raises(ValueError) as err:
-        ImageUrlSource("http://example.com/image.png", authentication="something")
+        ImageUrlSource("http://example.com/image.png", auth="something")
         assert err == "authentication must be 'basic' or 'digest'"
 
     # test missing password
     with pytest.raises(ValueError) as err:
-        ImageUrlSource(
-            "http://example.com/image.png", authentication="basic", username="user"
-        )
+        ImageUrlSource("http://example.com/image.png", auth="basic", username="user")
         assert err == "username and password must be specified"
 
     # test missing username
     with pytest.raises(ValueError) as err:
-        ImageUrlSource(
-            "http://example.com/image.png", authentication="basic", password="pass"
-        )
+        ImageUrlSource("http://example.com/image.png", auth="basic", password="pass")
         assert err == "username and password must be specified"
+
+    # test providing image source from dict
+    image_source_dict = {
+        "url": "http://example.com/image.png",
+        "auth": "basic",
+        "username": "user",
+        "password": "pass",
+    }
+    image_source = ImageUrlSource(**image_source_dict)
+    assert image_source.url == "http://example.com/image.png"
+    assert type(image_source._auth) is httpx.BasicAuth

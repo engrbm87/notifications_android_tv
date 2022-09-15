@@ -18,8 +18,6 @@ expect ConnectError:
 await notify.async_send(
     "message text",
     title="Title text",
-    fontsize="medium",
-    bkgcolor="green"
 )
 ```
 
@@ -27,10 +25,12 @@ await notify.async_send(
 
 - `title`: Notification title
 - `duration`: Display the notification for the specified period. Default is 5 seconds
-- `fontsize`: Text font size. Can be one of (`small`, `medium`, `large`, `max`)
-- `position`: Notification position. Can be one of (`bottom-right`, `bottom-left`, `top-right`, `top-left`, `center`). Default is `bottom-right`.
-- `bkgcolor`: Notification background color. Can be one of (`grey`, `black`, `indigo`, `green`, `red`, `cyan`, `teal`, `amber`, `pink`). Default is `grey`.
-- `transparency`: Background transparency of the notification. Can be one of (`0%`, `25%`, `50%`, `75%`, `100%`). Default is `0%`.
+- `fontsize`: Text font size. Use `FontSizes` class to set the fontsize. Default is `FontSizes.MEDIUM`
+- `position`: Notification position. Use `Positions` class to set position. Default is `Positions.BOTTOM_RIGHT`.
+- `bkgcolor`: Notification background color. Use `BkgColors` class to set color. Default is `BkgColors.GREY`.
+- `transparency`: Background transparency of the notification. Use `Transparencies` class. Default is `Transparencies._0_PERCENT`.
 - `interrupt`: Setting it to `True` makes the notification interactive and can be dismissed or selected to display more details. Default is `False`
-- `icon`: Attach icon to notification. Type must be `bytes`.
-- `image_file`: Attach image to notification. Type must be `bytes`.
+- `icon`: Can be `str` represnting the file path or an `ImageUrlSource` that includes the url and authentication params to fetch the image from a url.
+- `image_file`: Can be `str` represnting the file path or an `ImageUrlSource` that includes the url and authentication params to fetch the image from a url.
+
+Refer to the [example file](example.py) for setting these parameters directly or from a data dictionary (as documented in <https://www.home-assistant.io/integrations/nfandroidtv>)

@@ -43,11 +43,19 @@ class Positions(IntEnum):
     CENTER = 4
 
 
-class Transparencies(IntEnum):
-    """Supported transparencies for the notification overlay."""
+class Transparencies:
+    """Supported transparencies for the notification overlay.
 
-    _0_PERCENT = 1
-    _25_PERCENT = 2
-    _50_PERCENT = 3
-    _75_PERCENT = 4
-    _100_PERCENT = 5
+    Supported values:
+      - 0%
+      - 25%
+      - 50%
+      - 75%
+      - 100%
+    """
+
+    @classmethod
+    def from_percentage(cls, percentage: str) -> int:
+        """Convert percentage to int."""
+        _mapping = {"0%": 1, "25%": 2, "50%": 3, "75%": 4, "100%": 5}
+        return _mapping.get(percentage, 1)

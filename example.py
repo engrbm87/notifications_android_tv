@@ -1,4 +1,5 @@
 """Example scripts for sending notifications."""
+
 import asyncio
 from typing import Any
 
@@ -12,8 +13,8 @@ from notifications_android_tv import (
     Transparencies,
 )
 
-HOST = "127.0.0.1"
-IMAGE_SOURCE = "<replace with url link or file path>"
+HOST = "192.168.3.121"
+IMAGE_SOURCE = "R:\\notifications_android_tv\\image.jpg"
 
 
 async def main() -> None:
@@ -37,10 +38,10 @@ async def main() -> None:
         bkgcolor=BkgColors.RED,
         fontsize=FontSizes.LARGE,
         position=Positions.CENTER,
-        transparency=Transparencies._75_PERCENT,
+        transparency=Transparencies.from_percentage("75%"),
         interrupt=True,
-        icon=ImageUrlSource(IMAGE_SOURCE),
-        image_file=ImageUrlSource(IMAGE_SOURCE),
+        # icon=ImageUrlSource(IMAGE_SOURCE),
+        image_file=IMAGE_SOURCE,
     )
 
     # For constructing paramters from string values as documented
@@ -63,7 +64,7 @@ async def main() -> None:
         bkgcolor=BkgColors[data["color"].upper()],
         fontsize=FontSizes[data["fontsize"].upper()],
         position=Positions[data["position"].upper().replace("-", "_")],
-        transparency=Transparencies[f"{data['transparency'].replace('%', '_PERCENT')}"],
+        transparency=Transparencies.from_percentage(data["transparency"]),
         interrupt=data["interrupt"],
         icon=ImageUrlSource(data["icon"]),
         image_file=ImageUrlSource(data["image"]),

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-from io import BytesIO
 import logging
 from typing import Any
 
@@ -34,17 +33,17 @@ class ImageUrlSource:
     ) -> None:
         """Initiate image source class."""
         self.url = url
-        self._auth: httpx.BasicAuth | httpx.DigestAuth | None = None
+        self.auth: httpx.Auth | None = None
 
         if auth:
-            if auth not in ["basic", "disgest"]:
+            if auth not in ["basic", "digest"]:
                 raise ValueError("authentication must be 'basic' or 'digest'")
             if username is None or password is None:
                 raise ValueError("username and password must be specified")
             if auth == "basic":
-                self._auth = httpx.BasicAuth(username, password)
+                self.auth = httpx.BasicAuth(username, password)
             else:
-                self._auth = httpx.DigestAuth(username, password)
+                self.auth = httpx.DigestAuth(username, password)
 
 
 class Notifications:
@@ -62,18 +61,18 @@ class Notifications:
 
     async def _async_get_image(self, image_source: ImageUrlSource | str) -> bytes:
         """Load file from path or url."""
-        httpx_client: httpx.AsyncClient = (
-            self.httpx_client if self.httpx_client else httpx.AsyncClient()
+        httpx_client: httpx.AsyncClient = self.httpx_client or httpx.AsyncClient(
+            verify=False
         )
         if isinstance(image_source, ImageUrlSource):
             try:
                 async with httpx_client as client:
                     response = await client.get(
-                        image_source.url, auth=image_source._auth, timeout=10
+                        image_source.url, auth=image_source.auth, timeout=30
                     )
 
             except (httpx.ConnectError, httpx.TimeoutException) as err:
-                raise InvalidImage(
+                raise ConnectError(
                     f"Error fetching image from {image_source.url}: {err}"
                 ) from err
             if response.status_code != httpx.codes.OK:
@@ -85,18 +84,17 @@ class Notifications:
                     f"Response content type is not an image: {response.headers['content-type']}"
                 )
             return response.content
-        else:
-            try:
-                with open(image_source, "rb") as file:
-                    image = file.read()
-            except FileNotFoundError as err:
-                raise InvalidImage(err) from err
-            return image
+        try:
+            with open(image_source, "rb") as file:
+                image = file.read()
+        except FileNotFoundError as err:
+            raise InvalidImage(err) from err
+        return image
 
     async def async_connect(self) -> None:
         """Test connecting to server."""
-        httpx_client: httpx.AsyncClient = (
-            self.httpx_client if self.httpx_client else httpx.AsyncClient(verify=False)
+        httpx_client: httpx.AsyncClient = self.httpx_client or httpx.AsyncClient(
+            verify=False
         )
         try:
             async with httpx_client as client:
@@ -112,7 +110,7 @@ class Notifications:
         bkgcolor: BkgColors = BkgColors.GREY,
         fontsize: FontSizes = FontSizes.MEDIUM,
         position: Positions = Positions.BOTTOM_RIGHT,
-        transparency: Transparencies = Transparencies._0_PERCENT,
+        transparency: int = Transparencies.from_percentage("0%"),
         interrupt: bool = False,
         icon: ImageUrlSource | str | None = None,
         image_file: ImageUrlSource | str | None = None,
@@ -139,7 +137,8 @@ class Notifications:
         Usage:
         >>> from notifications_android_tv import Notifications
         >>> notifier = Notifications("192.168.3.88")
-        >>> notifier.async_send(
+        >>> await notifier.async_connect()
+        >>> await notifier.async_send(
                 "message to be sent",
                 title="Notification title",
                 duration="20",
@@ -153,39 +152,46 @@ class Notifications:
             "bkgcolor": bkgcolor.value,
             "fontsize": fontsize.value,
             "position": position.value,
-            "transparency": transparency.value,
+            "transparency": transparency,
             "interrupt": interrupt,
         }
 
+        icon_bytes = base64.b64decode(DEFAULT_ICON)
         if icon is not None:
-            icon_image = await self._async_get_image(icon)
-        else:
-            icon_image = BytesIO(base64.b64decode(DEFAULT_ICON)).read()
+            try:
+                icon_bytes = await self._async_get_image(icon)
+            except InvalidImage as err:
+                _LOGGER.warning(err)
 
         files = {
             "filename": (
                 "image",
-                icon_image,
+                icon_bytes,
                 "application/octet-stream",
                 {"Expires": "0"},
             )
         }
         if image_file:
-            files["filename2"] = (
-                "image",
-                await self._async_get_image(image_file),
-                "application/octet-stream",
-                {"Expires": "0"},
-            )
+            try:
+                image_bytes = await self._async_get_image(image_file)
+            except InvalidImage as err:
+                _LOGGER.warning(err)
+            else:
+                files["filename2"] = (
+                    "image",
+                    image_bytes,
+                    "application/octet-stream",
+                    {"Expires": "0"},
+                )
         _LOGGER.debug("data: %s, files: %s", data, files)
 
-        httpx_client: httpx.AsyncClient = (
-            self.httpx_client if self.httpx_client else httpx.AsyncClient(verify=False)
+        httpx_client: httpx.AsyncClient = self.httpx_client or httpx.AsyncClient(
+            verify=False
         )
         try:
             async with httpx_client as client:
                 response = await client.post(
-                    self.url, data=data, files=files, timeout=5
+                    self.url, data=data, files=files, timeout=10
                 )
 
         except (httpx.ConnectError, httpx.TimeoutException) as err:

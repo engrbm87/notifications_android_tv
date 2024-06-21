@@ -48,23 +48,24 @@ async def test_get_image_fails(httpx_mock: HTTPXMock) -> None:
     """Test getting an image from source fails."""
     notifier = Notifications("0.0.0.0")
 
-    # test getting image non existing file fails
-    with pytest.raises(exceptions.InvalidImage):
-        await notifier.async_send("Message text", icon="image_file.jpg")
+    # test timeout fetching image
+    with pytest.raises(exceptions.ConnectError):
+        httpx_mock.add_exception(httpx.TimeoutException(""))
+        await notifier._async_get_image(ImageUrlSource("http://example.com/image.png"))
 
     # test image url doesn't return 200
     httpx_mock.add_response(status_code=400)
     with pytest.raises(exceptions.InvalidImage):
-        await notifier.async_send(
-            "Message text", icon=ImageUrlSource("http://example.com/image.png")
-        )
+        await notifier._async_get_image(ImageUrlSource("http://example.com/image.png"))
 
     # test returned content is not an image type
     httpx_mock.add_response(headers={"content-type": "text/html"})
     with pytest.raises(exceptions.InvalidImage):
-        await notifier.async_send(
-            "Message text", icon=ImageUrlSource("http://example.com")
-        )
+        await notifier._async_get_image(ImageUrlSource("http://example.com"))
+
+    # test getting image non existing file fails
+    with pytest.raises(exceptions.InvalidImage):
+        await notifier._async_get_image("image_file.jpg")
 
 
 @pytest.mark.asyncio
@@ -85,7 +86,7 @@ async def test_image_source() -> None:
         ImageUrlSource("http://example.com/image.png", auth="basic", password="pass")
         assert err == "username and password must be specified"
 
-    # test providing image source from dict
+    # test url with basic auth
     image_source_dict = {
         "url": "http://example.com/image.png",
         "auth": "basic",
@@ -94,4 +95,15 @@ async def test_image_source() -> None:
     }
     image_source = ImageUrlSource(**image_source_dict)
     assert image_source.url == "http://example.com/image.png"
-    assert type(image_source._auth) is httpx.BasicAuth
+    assert isinstance(image_source.auth, httpx.BasicAuth)
+
+    # test url with digest auth
+    image_source_dict = {
+        "url": "http://example.com/image.png",
+        "auth": "digest",
+        "username": "user",
+        "password": "pass",
+    }
+    image_source = ImageUrlSource(**image_source_dict)
+    assert image_source.url == "http://example.com/image.png"
+    assert isinstance(image_source.auth, httpx.DigestAuth)

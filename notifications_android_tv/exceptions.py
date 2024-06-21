@@ -1,13 +1,17 @@
 """Exceptions raised by the library."""
 
 
-class ConnectError(Exception):
+class NotificationException(Exception):
+    """Base class for all exceptions raised by the library."""
+
+
+class ConnectError(NotificationException):
     """Exception raised for connection error."""
 
 
-class InvalidResponse(Exception):
+class InvalidResponse(NotificationException):
     """Exception raised for invalid response."""
 
 
-class InvalidImage(Exception):
+class InvalidImage(NotificationException):
     """Exception raised for invalid image."""

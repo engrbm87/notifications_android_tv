@@ -3,14 +3,8 @@
 from enum import Enum, IntEnum
 from typing import Final
 
-DEFAULT_TITLE: Final = "Notification"
-DEFAULT_ICON: Final = (
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGP6zwAAAgcBApo"
-    "cMXEAAAAASUVORK5CYII="
-)
 
-
-class BkgColors(Enum):
+class BkgColor(Enum):
     """Background color options."""
 
     GREY = "#607d8b"
@@ -24,7 +18,7 @@ class BkgColors(Enum):
     PINK = "#E91E63"
 
 
-class FontSizes(IntEnum):
+class FontSize(IntEnum):
     """Supported font sizes for notification text."""
 
     SMALL = 1
@@ -33,29 +27,61 @@ class FontSizes(IntEnum):
     MAX = 3
 
 
-class Positions(IntEnum):
-    """Supported positions for the notification overlay."""
-
-    BOTTOM_RIGHT = 0
-    BOTTOM_LEFT = 1
-    TOP_RIGHT = 2
-    TOP_LEFT = 3
-    CENTER = 4
-
-
-class Transparencies:
-    """Supported transparencies for the notification overlay.
+class Position:
+    """Position of the notification.
 
     Supported values:
-      - 0%
-      - 25%
-      - 50%
-      - 75%
-      - 100%
+      - 0: Bottom right
+      - 1: Bottom left
+      - 2: Top right
+      - 3: Top left
+      - 4: Center
+    """
+
+    @classmethod
+    def from_string(cls, position: str) -> int:
+        """Convert position to int."""
+        _mapping = {
+            "bottom-right": 0,
+            "bottom-left": 1,
+            "top-right": 2,
+            "top-left": 3,
+            "center": 4,
+        }
+        return _mapping.get(position, 0)
+
+
+class Transparency:
+    """Transparency for the notification overlay.
+
+    Supported values:
+      - 1: 0%
+      - 2; 25%
+      - 3: 50%
+      - 4: 75%
+      - 5: 100%
     """
 
     @classmethod
     def from_percentage(cls, percentage: str) -> int:
         """Convert percentage to int."""
-        _mapping = {"0%": 1, "25%": 2, "50%": 3, "75%": 4, "100%": 5}
+        _mapping = {
+            "0%": 1,
+            "25%": 2,
+            "50%": 3,
+            "75%": 4,
+            "100%": 5,
+        }
         return _mapping.get(percentage, 1)
+
+
+DEFAULT_TITLE: Final = "Notification"
+DEFAULT_DURATION: Final = 5
+DEFAULT_POSITION: Final = 0
+DEFAULT_BKGCOLOR: Final = BkgColor.GREY
+DEFAULT_FONTSIZE: Final = FontSize.MEDIUM
+DEFAULT_TRANSPARENCY: Final = 1
+DEFAULT_ICON: Final = (
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGP6zwAAAgcBApo"
+    "cMXEAAAAASUVORK5CYII="
+)

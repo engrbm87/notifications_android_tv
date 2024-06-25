@@ -1,20 +1,17 @@
 """Example scripts for sending notifications."""
 
 import asyncio
-from typing import Any
+import logging
 
-from notifications_android_tv import (
-    BkgColors,
-    ConnectError,
-    FontSizes,
-    ImageUrlSource,
-    Notifications,
-    Positions,
-    Transparencies,
-)
+from notifications_android_tv import ConnectError, Notifications
+from notifications_android_tv.exceptions import NotificationException
+from notifications_android_tv.notifier import NotificationParams
 
-HOST = "192.168.3.121"
-IMAGE_SOURCE = "R:\\notifications_android_tv\\image.jpg"
+_LOGGER = logging.getLogger(__name__)
+
+HOST = "<host>"
+ICON = "<icon path or url>"
+IMAGE = "<image path or url>"
 
 
 async def main() -> None:
@@ -24,51 +21,35 @@ async def main() -> None:
     # validate connection
     try:
         await notifier.async_connect()
-    except ConnectError:
+    except ConnectError as err:
+        _LOGGER.error(err)
         return
 
-    # Send a basic notification with message only
-    await notifier.async_send("This is a notification message")
-
-    # Customize all paramters in the notification
-    await notifier.async_send(
-        "This is a notification message",
-        title="Notification Title",
-        duration=5,
-        bkgcolor=BkgColors.RED,
-        fontsize=FontSizes.LARGE,
-        position=Positions.CENTER,
-        transparency=Transparencies.from_percentage("75%"),
-        interrupt=True,
-        # icon=ImageUrlSource(IMAGE_SOURCE),
-        image_file=IMAGE_SOURCE,
-    )
+    # # Send a basic notification with message only
+    await notifier.async_send("This is a simple notification message")
 
     # For constructing paramters from string values as documented
     # in Home Assistant https://www.home-assistant.io/integrations/nfandroidtv
-    data: dict[str, Any] = {
-        "duration": 5,
-        "color": "red",
-        "fontsize": "medium",
-        "position": "bottom-right",
-        "transparency": "75%",
-        "interrupt": 0,
-        "icon": {"url": "<image url>"},
-        "image": {"url": "<image url>"},
-    }
-
-    await notifier.async_send(
-        "This is a notification message",
-        title="Notification Title",
-        duration=int(data["duration"]),
-        bkgcolor=BkgColors[data["color"].upper()],
-        fontsize=FontSizes[data["fontsize"].upper()],
-        position=Positions[data["position"].upper().replace("-", "_")],
-        transparency=Transparencies.from_percentage(data["transparency"]),
-        interrupt=data["interrupt"],
-        icon=ImageUrlSource(data["icon"]),
-        image_file=ImageUrlSource(data["image"]),
+    notification_params = NotificationParams.from_dict(
+        {
+            "duration": "10",
+            "color": "red",
+            "fontsize": "small",
+            "position": "bottom-right",
+            "transparency": "25%",
+            "interrupt": 0,
+            "icon": {"path": ICON},
+            "image": {"url": IMAGE},
+        }
     )
+    try:
+        await notifier.async_send(
+            "This is a notification message",
+            title="Notification Title",
+            params=notification_params,
+        )
+    except NotificationException as err:
+        _LOGGER.error(err)
 
 
 if __name__ == "__main__":

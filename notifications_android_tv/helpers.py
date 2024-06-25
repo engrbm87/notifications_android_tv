@@ -49,7 +49,7 @@ class ImageSource:
         _cls = cls(url=url)
         if auth:
             if auth not in ["basic", "digest"]:
-                raise ValueError("authentication must be 'basic' or 'digest'")
+                raise ValueError(f"Invalid auth '{auth}', must be 'basic' or 'digest'")
             if username is None or password is None:
                 raise ValueError("username and password must be specified")
             if auth == "basic":
@@ -178,35 +178,29 @@ class NotificationParams:
             _params["interrupt"] = bool(interrupt)
 
         if icon := kwargs.get("icon"):
-            if isinstance(icon, str):
-                _params["icon"] = (
-                    ImageSource.from_url(icon)
-                    if icon.startswith("http")
-                    else ImageSource.from_path(icon)
-                )
-            elif isinstance(icon, dict) and "path" in icon:
-                _params["icon"] = ImageSource.from_path(icon["path"])
-            elif isinstance(icon, dict) and "url" in icon:
-                _params["icon"] = ImageSource.from_url(**icon)
-            else:
-                raise InvalidImageData("Invalid icon data")
-
+            _params["icon"] = create_image_source("icon", icon)
         if image := kwargs.get("image"):
-            if isinstance(image, str):
-                _params["image"] = (
-                    ImageSource.from_url(image)
-                    if image.startswith("http")
-                    else ImageSource.from_path(image)
-                )
-            elif isinstance(image, dict) and "path" in image:
-                _params["image"] = ImageSource.from_path(image["path"])
-            elif (
-                isinstance(image, dict)
-                and (url := image.get("url"))
-                and (url.startswith("http"))
-            ):
-                _params["image"] = ImageSource.from_url(**image)
-            else:
-                raise InvalidImageData("Invalid image data")
+            _params["image"] = create_image_source("image", image)
 
         return NotificationParams(**_params)
+
+
+def create_image_source(key: str, data: dict[str, Any]) -> ImageSource:
+    """create image source class."""
+    if isinstance(data, str):
+        return (
+            ImageSource.from_url(data)
+            if data.startswith("http")
+            else ImageSource.from_path(data)
+        )
+    elif isinstance(data, dict) and "path" in data:
+        return ImageSource.from_path(data["path"])
+    elif (
+        isinstance(data, dict) and (url := data.get("url")) and (url.startswith("http"))
+    ):
+        try:
+            return ImageSource.from_url(**data)
+        except ValueError as err:
+            raise InvalidImageData(f"Invalid '{key}' data: {str(err)}") from err
+    else:
+        raise InvalidImageData(f"Invalid '{key}' data")
